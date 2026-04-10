@@ -68,9 +68,43 @@ export interface Document {
   ownerId: string;
 }
 
+export interface MeetingAvailabilitySlot {
+  id: string;
+  userId: string;
+  start: string;
+  end: string;
+  createdAt: string;
+}
+
+export interface MeetingRequest {
+  id: string;
+  slotId: string;
+  senderId: string;
+  recipientId: string;
+  message: string;
+  status: 'pending' | 'accepted' | 'declined';
+  createdAt: string;
+  respondedAt?: string;
+}
+
+export interface ConfirmedMeeting {
+  id: string;
+  slotId: string;
+  entrepreneurId: string;
+  investorId: string;
+  requestId: string;
+  start: string;
+  end: string;
+  createdAt: string;
+}
+
 export interface AuthContextType {
   user: User | null;
+  pendingLoginRole: UserRole | null;
   login: (email: string, password: string, role: UserRole) => Promise<void>;
+  initiateTwoFactorLogin: (email: string, password: string, role: UserRole) => Promise<string>;
+  verifyTwoFactorOtp: (otp: string) => Promise<void>;
+  clearPendingLogin: () => void;
   register: (name: string, email: string, password: string, role: UserRole) => Promise<void>;
   logout: () => void;
   forgotPassword: (email: string) => Promise<void>;
@@ -78,4 +112,45 @@ export interface AuthContextType {
   updateProfile: (userId: string, updates: Partial<User>) => Promise<void>;
   isAuthenticated: boolean;
   isLoading: boolean;
+}
+
+export interface SchedulingContextType {
+  availabilitySlots: MeetingAvailabilitySlot[];
+  meetingRequests: MeetingRequest[];
+  confirmedMeetings: ConfirmedMeeting[];
+  getAvailabilityForUser: (userId: string) => MeetingAvailabilitySlot[];
+  getRequestsForUser: (userId: string) => MeetingRequest[];
+  getConfirmedMeetingsForUser: (userId: string) => ConfirmedMeeting[];
+  addAvailabilitySlot: (userId: string, start: string, end: string) => MeetingAvailabilitySlot;
+  updateAvailabilitySlot: (slotId: string, start: string, end: string) => MeetingAvailabilitySlot | null;
+  removeAvailabilitySlot: (slotId: string) => void;
+  sendMeetingRequest: (senderId: string, recipientId: string, slotId: string, message: string) => MeetingRequest;
+  respondToMeetingRequest: (requestId: string, status: 'accepted' | 'declined') => MeetingRequest | null;
+}
+
+export interface WalletAccount {
+  userId: string;
+  balance: number;
+}
+
+export interface PaymentTransaction {
+  id: string;
+  type: 'deposit' | 'withdraw' | 'transfer' | 'funding';
+  amount: number;
+  senderId: string;
+  receiverId: string;
+  status: 'pending' | 'completed' | 'failed';
+  note: string;
+  createdAt: string;
+}
+
+export interface PaymentContextType {
+  wallets: WalletAccount[];
+  transactions: PaymentTransaction[];
+  getWalletBalance: (userId: string) => number;
+  deposit: (userId: string, amount: number) => void;
+  withdraw: (userId: string, amount: number) => void;
+  transfer: (senderId: string, receiverId: string, amount: number, note: string) => void;
+  fundingTransfer: (investorId: string, entrepreneurId: string, amount: number, note: string) => void;
+  getTransactionsForUser: (userId: string) => PaymentTransaction[];
 }

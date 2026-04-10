@@ -60,7 +60,8 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['Inter var', 'sans-serif'],
+        sans: ['Manrope', 'Inter var', 'sans-serif'],
+        display: ['Sora', 'Manrope', 'sans-serif'],
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',

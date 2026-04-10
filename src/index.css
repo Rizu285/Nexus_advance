@@ -1,3 +1,87 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+	:root {
+		--surface-bg: #f8fafc;
+		--surface-card: #ffffff;
+		--text-primary: #0f172a;
+		--text-secondary: #475569;
+		--brand-primary: #2563eb;
+		--brand-secondary: #0d9488;
+		--brand-accent: #d97706;
+	}
+
+	html,
+	body,
+	#root {
+		min-height: 100%;
+	}
+
+	body {
+		@apply font-sans text-slate-900 antialiased;
+		background:
+			radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 35%),
+			radial-gradient(circle at 15% 15%, rgba(13, 148, 136, 0.06), transparent 30%),
+			var(--surface-bg);
+	}
+
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		@apply font-display tracking-tight text-slate-900;
+	}
+}
+
+@layer components {
+	.metric-grid {
+		@apply grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4;
+	}
+}
+
+/* React Calendar theme overrides to match Nexus palette */
+.react-calendar {
+	width: 100%;
+	border: 1px solid #e2e8f0;
+	border-radius: 0.75rem;
+	background-color: #ffffff;
+	font-family: 'Manrope', sans-serif;
+	line-height: 1.2;
+}
+
+.react-calendar__navigation button {
+	color: #0f172a;
+	min-height: 42px;
+	font-weight: 600;
+}
+
+.react-calendar__month-view__weekdays {
+	text-transform: uppercase;
+	font-size: 0.72rem;
+	color: #475569;
+}
+
+.react-calendar__tile {
+	border-radius: 0.5rem;
+	margin: 2px;
+	padding: 0.75rem 0.5rem;
+}
+
+.react-calendar__tile--active {
+	background: #2563eb;
+	color: #fff;
+}
+
+.react-calendar__tile--now {
+	background: #dbeafe;
+	color: #1e40af;
+}
+
+.react-calendar__tile--now.react-calendar__tile--active {
+	background: #1d4ed8;
+	color: #fff;
+}

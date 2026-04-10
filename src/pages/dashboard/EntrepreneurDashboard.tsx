@@ -7,14 +7,18 @@ import { Badge } from '../../components/ui/Badge';
 import { CollaborationRequestCard } from '../../components/collaboration/CollaborationRequestCard';
 import { InvestorCard } from '../../components/investor/InvestorCard';
 import { useAuth } from '../../context/AuthContext';
+import { useScheduling } from '../../context/SchedulingContext';
+import { usePayments } from '../../context/PaymentContext';
 import { CollaborationRequest } from '../../types';
 import { getRequestsForEntrepreneur } from '../../data/collaborationRequests';
 import { investors } from '../../data/users';
 
 export const EntrepreneurDashboard: React.FC = () => {
   const { user } = useAuth();
+  const { getConfirmedMeetingsForUser } = useScheduling();
+  const { getWalletBalance } = usePayments();
   const [collaborationRequests, setCollaborationRequests] = useState<CollaborationRequest[]>([]);
-  const [recommendedInvestors, setRecommendedInvestors] = useState(investors.slice(0, 3));
+  const recommendedInvestors = investors.slice(0, 3);
   
   useEffect(() => {
     if (user) {
@@ -35,6 +39,9 @@ export const EntrepreneurDashboard: React.FC = () => {
   if (!user) return null;
   
   const pendingRequests = collaborationRequests.filter(req => req.status === 'pending');
+  const upcomingMeetings = getConfirmedMeetingsForUser(user.id).filter(
+    meeting => new Date(meeting.start).getTime() > Date.now()
+  );
   
   return (
     <div className="space-y-6 animate-fade-in">
@@ -93,21 +100,23 @@ export const EntrepreneurDashboard: React.FC = () => {
               </div>
               <div>
                 <p className="text-sm font-medium text-accent-700">Upcoming Meetings</p>
-                <h3 className="text-xl font-semibold text-accent-900">2</h3>
+                <h3 className="text-xl font-semibold text-accent-900">{upcomingMeetings.length}</h3>
               </div>
             </div>
           </CardBody>
         </Card>
-        
-        <Card className="bg-success-50 border border-success-100">
+
+        <Card className="bg-emerald-50 border border-emerald-100">
           <CardBody>
             <div className="flex items-center">
-              <div className="p-3 bg-green-100 rounded-full mr-4">
-                <TrendingUp size={20} className="text-success-700" />
+              <div className="p-3 bg-emerald-100 rounded-full mr-4">
+                <TrendingUp size={20} className="text-emerald-700" />
               </div>
               <div>
-                <p className="text-sm font-medium text-success-700">Profile Views</p>
-                <h3 className="text-xl font-semibold text-success-900">24</h3>
+                <p className="text-sm font-medium text-emerald-700">Wallet Balance</p>
+                <h3 className="text-xl font-semibold text-emerald-900">
+                  ${getWalletBalance(user.id).toLocaleString()}
+                </h3>
               </div>
             </div>
           </CardBody>

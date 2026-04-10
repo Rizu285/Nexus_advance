@@ -10,10 +10,18 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const USER_STORAGE_KEY = 'business_nexus_user';
 const RESET_TOKEN_KEY = 'business_nexus_reset_token';
 
+interface PendingLoginChallenge {
+  userId: string;
+  role: UserRole;
+  otp: string;
+  expiresAt: number;
+}
+
 // Auth Provider Component
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [pendingLoginChallenge, setPendingLoginChallenge] = useState<PendingLoginChallenge | null>(null);
 
   // Check for stored user on initial load
   useEffect(() => {
@@ -48,6 +56,81 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const initiateTwoFactorLogin = async (
+    email: string,
+    password: string,
+    role: UserRole
+  ): Promise<string> => {
+    setIsLoading(true);
+
+    try {
+      await new Promise(resolve => setTimeout(resolve, 800));
+
+      const foundUser = users.find(u => u.email === email && u.role === role);
+      if (!foundUser) {
+        throw new Error('Invalid credentials or user not found');
+      }
+
+      const otp = `${Math.floor(100000 + Math.random() * 900000)}`;
+      const challenge: PendingLoginChallenge = {
+        userId: foundUser.id,
+        role,
+        otp,
+        expiresAt: Date.now() + 5 * 60 * 1000,
+      };
+
+      setPendingLoginChallenge(challenge);
+      toast.success('OTP sent. Use the demo code displayed below.');
+
+      return otp;
+    } catch (error) {
+      toast.error((error as Error).message);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const verifyTwoFactorOtp = async (otp: string): Promise<void> => {
+    setIsLoading(true);
+
+    try {
+      await new Promise(resolve => setTimeout(resolve, 700));
+
+      if (!pendingLoginChallenge) {
+        throw new Error('No active login challenge. Please sign in again.');
+      }
+
+      if (Date.now() > pendingLoginChallenge.expiresAt) {
+        setPendingLoginChallenge(null);
+        throw new Error('OTP expired. Please request a new code.');
+      }
+
+      if (otp !== pendingLoginChallenge.otp) {
+        throw new Error('Invalid OTP code');
+      }
+
+      const authenticatedUser = users.find(u => u.id === pendingLoginChallenge.userId);
+      if (!authenticatedUser) {
+        throw new Error('User not found');
+      }
+
+      setUser(authenticatedUser);
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(authenticatedUser));
+      setPendingLoginChallenge(null);
+      toast.success('Successfully logged in with 2FA!');
+    } catch (error) {
+      toast.error((error as Error).message);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const clearPendingLogin = (): void => {
+    setPendingLoginChallenge(null);
   };
 
   // Mock register function - in a real app, this would make an API call
@@ -171,7 +254,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const value = {
     user,
+    pendingLoginRole: pendingLoginChallenge?.role ?? null,
     login,
+    initiateTwoFactorLogin,
+    verifyTwoFactorOtp,
+    clearPendingLogin,
     register,
     logout,
     forgotPassword,

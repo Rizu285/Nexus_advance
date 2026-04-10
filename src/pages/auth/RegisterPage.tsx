@@ -6,6 +6,20 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { UserRole } from '../../types';
 
+const getPasswordStrength = (password: string): { score: number; label: string } => {
+  let score = 0;
+
+  if (password.length >= 8) score += 1;
+  if (/[A-Z]/.test(password)) score += 1;
+  if (/[a-z]/.test(password)) score += 1;
+  if (/\d/.test(password)) score += 1;
+  if (/[^A-Za-z0-9]/.test(password)) score += 1;
+
+  if (score <= 2) return { score, label: 'Weak' };
+  if (score <= 4) return { score, label: 'Medium' };
+  return { score, label: 'Strong' };
+};
+
 export const RegisterPage: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -17,6 +31,7 @@ export const RegisterPage: React.FC = () => {
   
   const { register } = useAuth();
   const navigate = useNavigate();
+  const passwordStrength = getPasswordStrength(password);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,6 +146,42 @@ export const RegisterPage: React.FC = () => {
               fullWidth
               startAdornment={<Lock size={18} />}
             />
+
+            <div>
+              <div className="flex items-center justify-between text-xs mb-1">
+                <span className="text-gray-500">Password strength</span>
+                <span
+                  className={`font-semibold ${
+                    passwordStrength.label === 'Strong'
+                      ? 'text-success-700'
+                      : passwordStrength.label === 'Medium'
+                        ? 'text-accent-700'
+                        : 'text-error-500'
+                  }`}
+                >
+                  {passwordStrength.label}
+                </span>
+              </div>
+              <div className="grid grid-cols-5 gap-1">
+                {[1, 2, 3, 4, 5].map((segment) => (
+                  <div
+                    key={segment}
+                    className={`h-1.5 rounded ${
+                      segment <= passwordStrength.score
+                        ? passwordStrength.label === 'Strong'
+                          ? 'bg-success-500'
+                          : passwordStrength.label === 'Medium'
+                            ? 'bg-accent-500'
+                            : 'bg-error-500'
+                        : 'bg-gray-200'
+                    }`}
+                  />
+                ))}
+              </div>
+              <p className="mt-1 text-xs text-gray-500">
+                Use at least 8 characters with upper/lowercase letters, numbers, and symbols.
+              </p>
+            </div>
             
             <Input
               label="Confirm password"
